@@ -1,13 +1,9 @@
-// app/layout.tsx
+// app/layout.tsx (Tailwind 版本)
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
-
-// 1. 导入我们的 AuthProvider
+import "./globals.css"; // (!!) 确保 globals.css (它包含了 Tailwind) 被导入
 import { AuthProvider } from "@/context/AuthContext";
-
-// 1. 导入 Navbar
 import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -24,12 +20,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {/* 2. 用 AuthProvider 把所有内容(children)包裹起来 */}
+      {/* (!!!) 1. 给 body 添加一个柔和的灰色背景 (!!!) */}
+      <body className={`${inter.className} bg-gray-100 min-h-screen`}>
         <AuthProvider>
-          {/* 这里我们可以放一个全局的 Navbar */}
-          <Navbar />
-          <main>{children}</main>
+          {/* Navbar 现在会在一个白色背景的容器里 */}
+          <Navbar /> 
+
+          {/* (!!!) 2. 创建一个居中、有最大宽度的"容器" (!!!) */}
+          {/* 就像 Reddit/微博 的主内容区 */}
+          <main className="max-w-4xl mx-auto p-4">
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

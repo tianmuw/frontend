@@ -52,62 +52,68 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const posts = await getPosts(sort);
 
   return (
-    <main style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>社交购物广场</h1>
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">社交购物广场</h1>
+
       <SortTabs />
-      <p>从我们的 Django API 加载的实时数据：</p>
 
-      <hr style={{ margin: '1rem 0' }} />
-
-      {/* 2. 检查是否有帖子 */}
+      {/* (!!!) 帖子列表容器 (!!!) */}
       {posts.length === 0 ? (
-        <p>没有帖子。请去 Django admin 后台创建一些。</p>
+        <p className="text-gray-600">没有帖子。快去发布一个吧！</p>
       ) : (
-        // 3. 遍历 (map) 帖子数组，为每个帖子显示一个卡片
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        // (!!) flex-col 和 space-y-4 会给卡片之间添加 1rem 的间距
+        <div className="flex flex-col space-y-4">
           {posts.map((post) => (
+
+            // (!!!) 帖子卡片 (!!!)
+            // 这就是我们的新卡片样式：白色背景、圆角、阴影、flex 布局
             <div
               key={post.id}
-              style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '8px', display: 'flex', gap: '1rem', }}
+              className="bg-white shadow-md rounded-lg p-4 flex space-x-4"
             >
-              {/* (!!!) 新增：投票组件放在左侧 (!!!) */}
-              <VoteButtons
+              {/* 投票组件 (我们稍后也会改造它) */}
+              <VoteButtons 
                 postId={post.id}
                 initialScore={post.score}
                 initialUserVote={post.user_vote}
               />
 
-              <div style={{ flex: 1 }}>
+              {/* (!!) 帖子主内容 (!!!) */}
+              <div className="flex-1"> 
                 {/* 帖子标题 */}
-                <Link
-                  href={`/posts/${post.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                <Link 
+                  href={`/posts/${post.id}`} 
+                  className="text-xl font-bold text-gray-900 hover:text-blue-600 no-underline"
                 >
-                  <h2 style={{ margin: 0 }}>{post.title}</h2>
+                  {post.title}
                 </Link>
 
-                {/* 作者和话题信息 */}
-                <p style={{ fontSize: '0.9rem', color: '#555' }}>
-                  发布者: <strong>{post.author.username}</strong> |
-                  话题:
-                  {/* 我们把话题名称变成了"可点击"的链接 */}
-                  <Link
-                    href={`/topics/${post.topic.slug}`}
-                    style={{ color: '#0070f3', textDecoration: 'none', fontWeight: 'bold' }}
+                {/* 元信息 (作者, 话题) */}
+                <p className="text-sm text-gray-500 mt-1">
+                  发布者: 
+                  <strong className="font-medium text-gray-900"> {post.author.username}</strong> | 
+                  话题: 
+                  <Link 
+                    href={`/topics/${post.topic.slug}`} 
+                    className="font-medium text-blue-600 hover:underline ml-1"
                   >
                     {post.topic.name}
                   </Link>
                 </p>
 
-                {/* 帖子内容 */}
-                <p>{post.content}</p>
+                {/* 帖子内容 (我们只显示摘要) */}
+                <p className="text-gray-700 mt-2">
+                  {post.content.length > 200 
+                    ? `${post.content.substring(0, 200)}...` 
+                    : post.content}
+                </p>
 
-                {/* 关联的商品信息 */}
-                <div style={{ background: '#f9f9f9', padding: '1rem', marginTop: '1rem' }}>
-                  <strong>关联商品:</strong>
-                  <p>
+                {/* (!!) 关联商品卡片 (!!!) */}
+                <div className="bg-gray-50 p-3 mt-3 rounded-md border border-gray-200">
+                  <strong className="text-gray-800">关联商品:</strong>
+                  <p className="text-sm text-gray-700 truncate">
                     {post.product.scrape_status === 'SUCCESS'
-                      ? post.product.product_title // 显示抓取到的标题
+                      ? post.product.product_title
                       : `[${post.product.scrape_status}] - ${post.product.original_url}`}
                   </p>
                 </div>
@@ -116,6 +122,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

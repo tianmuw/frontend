@@ -1,14 +1,21 @@
-// components/Comment.tsx
+// components/Comment.tsx (完整替换)
 'use client';
 
 import { ApiComment } from '@/types';
-import React from 'react';
+import React, { useState } from 'react'; // (!!) 导入 useState
+import CommentForm from './CommentForm'; // (!!) 导入表单
 
+// (!!) 1. Props 现在需要 postId 和回调函数
 interface CommentProps {
   comment: ApiComment;
+  postId: string;
+  onCommentPosted: () => void;
 }
 
-export default function Comment({ comment }: CommentProps) {
+export default function Comment({ comment, postId, onCommentPosted }: CommentProps) {
+  // (!!) 2. 新的状态：是否正在回复此评论?
+  const [isReplying, setIsReplying] = useState(false);
+
   const commentStyle: React.CSSProperties = {
     border: '1px solid #eee',
     padding: '1rem',
@@ -17,7 +24,6 @@ export default function Comment({ comment }: CommentProps) {
     background: '#fff'
   };
 
-  // "盖楼"的缩进样式
   const repliesStyle: React.CSSProperties = {
     marginLeft: '2rem', 
     borderLeft: '2px solid #ddd',
@@ -25,27 +31,56 @@ export default function Comment({ comment }: CommentProps) {
     marginTop: '1rem',
   };
 
+  const replyButtonStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    color: '#0070f3',
+    cursor: 'pointer',
+    padding: '4px 0',
+    fontSize: '0.9rem',
+  };
+
   return (
     <div style={commentStyle}>
-      {/* 1. 评论作者和时间 */}
+      {/* ... (作者和内容保持不变) ... */}
       <p style={{ margin: 0, fontSize: '0.9rem' }}>
         <strong>{comment.author.username}</strong>
         <span style={{ color: '#888', marginLeft: '10px' }}>
-          {/* 简单格式化一下日期 */}
           {new Date(comment.created_at).toLocaleString()}
         </span>
       </p>
-
-      {/* 2. 评论内容 */}
       <p style={{ marginTop: '0.5rem' }}>{comment.content}</p>
 
-      {/* (!!!) 这就是递归 (!!!) */}
-      {/* 3. 如果有回复, 就渲染"回复"区域 */}
+      {/* (!!) 3. 添加"回复"按钮 (!!) */}
+      <button onClick={() => setIsReplying(!isReplying)} style={replyButtonStyle}>
+        {isReplying ? '取消回复' : '回复'}
+      </button>
+
+      {/* (!!) 4. 如果正在回复, 就显示 CommentForm (!!) */}
+      {isReplying && (
+        <CommentForm
+          postId={postId}
+          parentId={comment.id} // (!!) 关键: parentId 是 *这条* 评论的 ID
+          onCommentPosted={() => {
+            setIsReplying(false); // 1. (成功后) 隐藏表单
+            onCommentPosted();    // 2. (成功后) 调用 *顶级* 回调来刷新
+          }}
+          placeholderText={`回复 @${comment.author.username}...`}
+        />
+      )}
+
+      {/* (!!) 5. 递归渲染回复 (!!）
+          我们必须把 postId 和 onCommentPosted *再次*传递给下一层
+      */}
       {comment.replies && comment.replies.length > 0 && (
         <div style={repliesStyle}>
-          {/* 遍历所有回复, 并为每个回复再次渲染 <Comment> 组件 */}
           {comment.replies.map((reply) => (
-            <Comment key={reply.id} comment={reply} />
+            <Comment 
+              key={reply.id} 
+              comment={reply}
+              postId={postId} // (!!) 传递
+              onCommentPosted={onCommentPosted} // (!!) 传递
+            />
           ))}
         </div>
       )}
