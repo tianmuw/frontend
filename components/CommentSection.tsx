@@ -1,11 +1,11 @@
-// components/CommentSection.tsx (完整替换)
+// components/CommentSection.tsx (Tailwind 版)
 'use client';
 
-import { useState, useEffect, useCallback } from 'react'; // (!!) 导入 useCallback
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { ApiComment } from '@/types';
-import Comment from './Comment';      // 导入"子"
-import CommentForm from './CommentForm';  // (!!) 导入"表单"
+import Comment from './Comment';
+import CommentForm from './CommentForm';
 
 interface CommentSectionProps {
   postId: string;
@@ -13,11 +13,9 @@ interface CommentSectionProps {
 
 export default function CommentSection({ postId }: CommentSectionProps) {
   const [comments, setComments] = useState<ApiComment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // 1. (!!) 我们把"获取评论"的逻辑提取到一个 useCallback 钩子中 (!!)
-  //    useCallback 确保这个函数本身不会在每次渲染时都重新创建
-  //    这使得我们可以安全地把它作为 prop 传递下去
   const fetchComments = useCallback(async () => {
     try {
       const response = await axios.get(
@@ -26,33 +24,39 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       setComments(response.data);
     } catch (error) {
       console.error("无法获取评论", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [postId, apiUrl]); // 依赖 postId 和 apiUrl
+  }, [postId, apiUrl]);
 
-  // 2. 在组件加载时，调用一次 fetchComments
   useEffect(() => {
     fetchComments();
-  }, [fetchComments]); // (!!) 依赖 fetchComments 函数 (!!)
+  }, [fetchComments]);
 
   return (
-    <section>
-      <h2>评论区</h2>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mt-4">
+      <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
+        全部评论 
+        <span className="ml-2 text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+          {/* 如果你想显示评论总数，这里可以加 */}
+        </span>
+      </h3>
 
-      {/* 3. (!!) 使用我们新的 CommentForm (!!)
-          - parentId={null} 表示这是一个"顶级"评论表单
-          - onCommentPosted={fetchComments} 告诉表单:"发布成功后, 调用 fetchComments 刷新！"
-      */}
-      <CommentForm
-        postId={postId}
-        parentId={null}
-        onCommentPosted={fetchComments}
-      />
-
-      {/* 4. 渲染评论树 */}
-      <div style={{ background: '#f9f9f9', padding: '1px 1rem 1rem 1rem', borderRadius: '8px' }}>
-        {comments.length > 0 ? (
+      {/* 顶级评论表单 */}
+      <div className="mb-8">
+         <CommentForm
+            postId={postId}
+            parentId={null}
+            onCommentPosted={fetchComments}
+          />
+      </div>
+      
+      {/* 评论列表 */}
+      <div className="space-y-6">
+        {isLoading ? (
+           <p className="text-gray-500 text-center py-4">加载评论中...</p>
+        ) : comments.length > 0 ? (
           comments.map((comment) => (
-            // 5. (!!) 把 postId 和 fetchComments 回调 *传递* 给子组件 (!!)
             <Comment 
               key={comment.id} 
               comment={comment}
@@ -61,9 +65,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             />
           ))
         ) : (
-          <p>还没有评论，快来抢沙发吧！</p>
+          <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+            <p className="text-gray-500">还没有评论，快来抢沙发吧！</p>
+          </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

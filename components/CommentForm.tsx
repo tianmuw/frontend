@@ -1,4 +1,4 @@
-// components/CommentForm.tsx
+// components/CommentForm.tsx (Tailwind 版)
 'use client';
 
 import { useState } from 'react';
@@ -8,65 +8,73 @@ import Link from 'next/link';
 
 interface CommentFormProps {
   postId: string;
-  parentId: number | null; // null = 顶级评论, number = 回复
-  onCommentPosted: () => void; // (!!) 一个回调函数，告诉父组件"刷新"
-  placeholderText?: string; // (可选) 自定义占位符
+  parentId: number | null;
+  onCommentPosted: () => void;
+  placeholderText?: string;
 }
 
 export default function CommentForm({ postId, parentId, onCommentPosted, placeholderText }: CommentFormProps) {
   const [content, setContent] = useState('');
   const { isAuthenticated, accessToken, user } = useAuth();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated || !accessToken) return;
+    if (!content.trim()) return;
 
+    setIsSubmitting(true);
     try {
-      // (!!) 调用我们的 create_comment API (!!)
       await axios.post(
         `${apiUrl}/api/v1/posts/${postId}/create_comment/`,
         {
           content: content,
-          parent: parentId, // (!!) 关键: 传入 parentId (!!）
+          parent: parentId,
         },
         {
           headers: { Authorization: `JWT ${accessToken}` },
         }
       );
-
-      // 成功!
-      setContent('');       // 1. 清空表单
-      onCommentPosted();    // 2. (!!) 调用回调, 告诉父组件去刷新评论树 (!!)
-
+      setContent('');
+      onCommentPosted();
     } catch (error) {
       console.error('发布评论失败', error);
       alert('发布评论失败。');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // 如果未登录，不显示表单
   if (!isAuthenticated) {
     return (
-      <p style={{ marginTop: '1rem' }}>
-        请 <Link href="/login" style={{color: '#0070f3'}}>登录</Link> 后发表评论。
-      </p>
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center text-sm text-gray-600">
+        想要参与讨论？请先 <Link href="/login" className="text-blue-600 hover:underline font-medium">登录</Link> 或 <Link href="/register" className="text-blue-600 hover:underline font-medium">注册</Link>。
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ margin: '1rem 0' }}>
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder={placeholderText || `以 ${user?.username} 的身份发表评论...`}
-        required
-        rows={3}
-        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-      />
-      <button type="submit" style={{ marginTop: '8px', padding: '10px 15px' }}>
-        发布
-      </button>
+    <form onSubmit={handleSubmit} className="mb-6">
+      <div className="relative">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={placeholderText || `以 ${user?.username} 的身份发表评论...`}
+          required
+          rows={3}
+          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y text-sm text-gray-800 bg-white"
+        />
+        <div className="mt-2 flex justify-end">
+           <button 
+             type="submit" 
+             disabled={isSubmitting || !content.trim()}
+             className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+           >
+             {isSubmitting ? '发布中...' : '发布评论'}
+           </button>
+        </div>
+      </div>
     </form>
   );
 }

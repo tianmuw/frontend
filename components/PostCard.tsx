@@ -11,23 +11,38 @@ interface PostCardProps {
 
 export default function PostCard({ post }: PostCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors overflow-hidden cursor-pointer">
       <div className="p-3 sm:p-4">
         
         {/* 顶部元数据 */}
-        <div className="flex items-center text-xs text-gray-500 mb-2 space-x-2">
+        <div className="flex items-center text-xs text-gray-500 mb-2">
           <Link 
             href={`/topics/${post.topic.slug}`} 
-            className="font-bold text-gray-900 hover:underline flex items-center"
+            className="flex items-center group"
             onClick={(e) => e.stopPropagation()} // 防止冒泡
           >
-            <span className="bg-gray-200 rounded-full w-5 h-5 mr-1 flex items-center justify-center text-[10px]">#</span>
-            {post.topic.name}
+            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2 group-hover:bg-gray-300">
+                <span className="text-gray-600 font-bold text-xs">t/</span>
+            </div>
+            <span className="font-bold text-gray-900 hover:underline text-sm mr-2">t/{post.topic.name}</span>
           </Link>
-          <span>•</span>
-          <span>发布者 u/{post.author.username}</span>
-          <span>•</span>
-          <span>{new Date(post.created_at).toLocaleDateString()}</span>
+          <span className="text-gray-400 mr-1">•</span>
+
+          {/* 用户信息 (次要) */}
+          {/* 点击 u/用户 -> 去用户页 (虽然还没做) */}
+
+          <span className="text-gray-500 flex items-center">
+            发布者
+            <Link 
+                href={`/users/${post.author.username}`} 
+                className="hover:underline ml-1 mr-1"
+                onClick={(e) => e.stopPropagation()}
+            >
+                u/{post.author.username}
+            </Link>
+            <span className="mr-1">•</span>
+            {new Date(post.created_at).toLocaleDateString()}
+          </span>
         </div>
 
         {/* 中间: 标题和内容 (点击跳转) */}
