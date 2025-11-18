@@ -1,107 +1,112 @@
-// components/VoteButtons.tsx
+// components/VoteButtons.tsx (Tailwind 版 - 横向胶囊风格)
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // 添加 useEffect 以便同步 server 端的 score
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-// 1. 定义 props 类型
 interface VoteButtonsProps {
   postId: number;
   initialScore: number;
-  initialUserVote: number | null; // 1 (顶), -1 (踩), or null (未投)
+  initialUserVote: number | null;
 }
 
 export default function VoteButtons({ postId, initialScore, initialUserVote }: VoteButtonsProps) {
   const { accessToken, isAuthenticated } = useAuth();
-  const router = useRouter(); // (如果未登录，需要跳转)
+  const router = useRouter();
 
-  // 2. (关键) 用 useState 管理"本地"状态
   const [score, setScore] = useState(initialScore);
   const [userVote, setUserVote] = useState(initialUserVote);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 3. 处理投票的函数
+  // (修复) 当 props 变化时更新 state (例如列表刷新时)
+  useEffect(() => {
+    setScore(initialScore);
+    setUserVote(initialUserVote);
+  }, [initialScore, initialUserVote]);
+
   const handleVote = async (newVoteType: 1 | -1) => {
     if (!isAuthenticated) {
-      alert('请先登录再投票！');
-      router.push('/login');
+      // 使用浏览器原生的 confirm 稍微优雅一点，或者直接跳
+      if (confirm('请先登录再投票！是否去登录？')) {
+        router.push('/login');
+      }
       return;
     }
-
-    if (isLoading) return; // 防止重复点击
+    if (isLoading) return;
     setIsLoading(true);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     let newScore = score;
     let newLocalUserVote = userVote;
 
-    // 4. (!!) 乐观更新 (Optimistic Update) (!!)
-    //    我们先在前端更新 UI，让用户感觉非常快
     if (userVote === newVoteType) {
-      // 4a. 取消投票 (顶 -> 顶)
       newScore -= newVoteType;
       newLocalUserVote = null;
     } else if (userVote !== null) {
-      // 4b. 改变投票 (顶 -> 踩)
-      newScore -= userVote; // 减去旧的
-      newScore += newVoteType; // 加上新的
+      newScore -= userVote;
+      newScore += newVoteType;
       newLocalUserVote = newVoteType;
     } else {
-      // 4c. 首次投票 (null -> 顶)
       newScore += newVoteType;
       newLocalUserVote = newVoteType;
     }
 
-    // 立即更新前端 UI
     setScore(newScore);
     setUserVote(newLocalUserVote);
 
-    // 5. 然后，在后台真正地调用 API
     try {
       const response = await axios.post(
         `${apiUrl}/api/v1/posts/${postId}/vote/`,
-        { vote_type: newVoteType }, // 发送 { "vote_type": 1 }
-        {
-          headers: { Authorization: `JWT ${accessToken}` },
-        }
+        { vote_type: newVoteType },
+        { headers: { Authorization: `JWT ${accessToken}` } }
       );
-
-      // 6. (!! 关键 !!) 用 API 返回的"真实"分数来同步状态
-      //    这可以防止我们的前端和后端分数不一致
       setScore(response.data.score);
-
     } catch (error) {
       console.error("投票失败", error);
-      // 7. (回滚) 如果 API 调用失败，我们把状态滚回原样
       setScore(initialScore);
       setUserVote(initialUserVote);
-      alert('投票失败，请重试。');
     } finally {
-      setIsLoading(false); // 允许再次点击
+      setIsLoading(false);
     }
   };
 
-  // (为 'useRouter' 导入)
-  // 在文件顶部添加: import { useRouter } from 'next/navigation';
-
-  // 8. 渲染按钮
-  const buttonStyle = (type: 1 | -1): React.CSSProperties => ({
-    padding: '5px 10px',
-    fontSize: '1.2rem',
-    cursor: isLoading ? 'wait' : 'pointer',
-    border: '1px solid #ccc',
-    // (新) 根据 userVote 高亮按钮
-    color: userVote === type ? (type === 1 ? 'green' : 'red') : '#333',
-    fontWeight: userVote === type ? 'bold' : 'normal',
-  });
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <button onClick={() => handleVote(1)} style={buttonStyle(1)}>▲</button>
-      <strong style={{ minWidth: '30px', textAlign: 'center' }}>{score}</strong>
-      <button onClick={() => handleVote(-1)} style={buttonStyle(-1)}>▼</button>
+    // (Tailwind) 灰色胶囊背景，圆角，内部 flex 布局
+    <div className="flex items-center bg-gray-100 rounded-full px-2 py-1 space-x-1">
+      {/* 顶按钮 */}
+      <button 
+        onClick={(e) => { e.preventDefault(); handleVote(1); }}
+        className={`p-1 rounded hover:bg-gray-200 transition-colors ${
+          userVote === 1 ? 'text-orange-600' : 'text-gray-500'
+        }`}
+      >
+        {/* SVG 向上箭头 */}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+        </svg>
+      </button>
+
+      {/* 分数 (加粗) */}
+      <span className={`text-sm font-bold min-w-[1.5rem] text-center ${
+          userVote === 1 ? 'text-orange-600' : (userVote === -1 ? 'text-blue-600' : 'text-gray-700')
+      }`}>
+        {score}
+      </span>
+
+      {/* 踩按钮 */}
+      <button 
+        onClick={(e) => { e.preventDefault(); handleVote(-1); }}
+        className={`p-1 rounded hover:bg-gray-200 transition-colors ${
+          userVote === -1 ? 'text-blue-600' : 'text-gray-500'
+        }`}
+      >
+         {/* SVG 向下箭头 */}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+        </svg>
+      </button>
     </div>
   );
 }

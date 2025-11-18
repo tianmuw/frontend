@@ -30,6 +30,7 @@ export interface ApiPost {
   product: ApiProduct;
   score: number;
   user_vote: number | null; // 可能是 1, -1, 或 null
+  comments_count: number;
 }
 
 // types/index.ts (在文件底部追加)
