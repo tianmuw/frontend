@@ -66,3 +66,12 @@ export interface ApiProfile {
   is_followed: boolean; // 我是否关注了他
   avatar?: string | null;
 }
+
+export interface ApiNotification {
+  id: number;
+  notification_type: 'follow' | 'comment' | 'reply' | 'vote';
+  actor: ApiUser;    // 触发者 (Mike)
+  post_id?: number;  // 关联帖子 (可选)
+  is_read: boolean;
+  created_at: string;
+}

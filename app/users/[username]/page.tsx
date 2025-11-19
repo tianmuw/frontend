@@ -8,6 +8,7 @@ import FollowButton from "@/components/FollowButton";
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface UserPageProps {
   params: Promise<{ username: string }>;
@@ -15,11 +16,13 @@ interface UserPageProps {
 
 export default function UserPage({ params }: UserPageProps) {
   const { username } = use(params);
-  const { accessToken } = useAuth();
+  const { accessToken, isAuthenticated, user } = useAuth();
+  const router = useRouter(); // 初始化 router
   
   const [profile, setProfile] = useState<ApiProfile | null>(null);
   const [posts, setPosts] = useState<ApiPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isChatting, setIsChatting] = useState(false); // 防止重复点击
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,7 +52,7 @@ export default function UserPage({ params }: UserPageProps) {
     fetchData();
   }, [username, accessToken]);
 
-  // (!!!) 关键：处理关注状态变化 (!!!)
+  // 处理关注状态变化
   const handleFollowChange = (newIsFollowed: boolean) => {
     if (!profile) return;
 
@@ -61,6 +64,46 @@ export default function UserPage({ params }: UserPageProps) {
             ? profile.followers_count + 1 // 关注：+1
             : profile.followers_count - 1 // 取消：-1
     });
+  };
+
+  // (!!!) 新增：处理私信点击 (!!!)
+  const handleStartChat = async () => {
+    if (!isAuthenticated) {
+        if(confirm('私信需要先登录，是否去登录？')) {
+            router.push('/login');
+        }
+        return;
+    }
+    
+    // 防止自己给自己发私信
+    if (user?.username === username) {
+        alert("你不能给自己发私信。");
+        return;
+    }
+
+    if (isChatting) return;
+    setIsChatting(true);
+
+    try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        // 调用后端的 start 接口
+        const res = await axios.post(
+            `${apiUrl}/api/v1/chat/conversations/start/`,
+            { username: username }, // 发送对方的用户名
+            { headers: { Authorization: `JWT ${accessToken}` } }
+        );
+
+        // 后端返回 { id: 1, participants: [...] }
+        const conversationId = res.data.id;
+        
+        // 跳转到聊天页面
+        router.push(`/messages/${conversationId}`);
+
+    } catch (error) {
+        console.error("Failed to start chat", error);
+        alert("无法发起私信，请稍后重试。");
+        setIsChatting(false);
+    }
   };
 
   if (loading) return <div className="p-10 text-center text-gray-500">加载中...</div>;
@@ -105,15 +148,23 @@ export default function UserPage({ params }: UserPageProps) {
               </div>
 
               <div className="flex justify-center sm:justify-start gap-3">
-                  {/* (!!!) 传入回调函数 (!!!) */}
+                  {/* 传入回调函数*/}
                   <FollowButton 
                     username={profile.username} 
                     initialIsFollowed={profile.is_followed}
                     onFollowChange={handleFollowChange} 
                   />
-                  <button className="bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm font-bold hover:bg-gray-200 border border-gray-200">
-                    私信
-                  </button>
+                  {/* 激活私信按钮 */}
+                  {/* 只有当查看的不是自己时，才显示私信按钮 */}
+                  {user?.username !== username && (
+                      <button 
+                        onClick={handleStartChat}
+                        disabled={isChatting}
+                        className="bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm font-bold hover:bg-gray-200 border border-gray-200 disabled:opacity-50"
+                      >
+                        {isChatting ? '跳转中...' : '私信'}
+                      </button>
+                  )}
               </div>
           </div>
        </div>

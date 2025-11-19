@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +20,20 @@ export default function Navbar() {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
+
+  // 点击页面其他区域关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     // 固定在顶部，z-index 确保在最上层
@@ -66,8 +83,23 @@ export default function Navbar() {
                 <span className="font-medium">发帖</span>
               </Link>
 
-              <div className="relative group h-full flex items-center">
-                <button className="flex items-center gap-2 border border-transparent hover:border-gray-200 p-1 rounded cursor-pointer py-2">
+              {/* 在这里插入铃铛 */}
+              <NotificationBell />
+
+              <div 
+                ref={dropdownRef}
+                className="relative group h-full flex items-center" 
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setTimeout(() => setIsDropdownOpen(false), 100)}
+              >
+                <button 
+                  className="flex items-center gap-2 border border-transparent hover:border-gray-200 p-1 rounded cursor-pointer py-2"
+                  // 移动端点击按钮切换菜单（可选优化）
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}  
+                >
                   {user.avatar ? (
                     <img
                       src={user.avatar}
@@ -87,14 +119,19 @@ export default function Navbar() {
                 </button>
                 {/* 下拉菜单 (简单实现) */}
                 <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg hidden group-hover:block overflow-hidden z-50
-                                 before:absolute before:-top-4 before:left-0 before:w-full before:h-4 before:bg-transparent">
-                  <Link href={`/users/${user.username}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">
+                                 before:absolute before:-top-4 before:left-0 before:w-full before:h-4 before:bg-transparent"
+                  style={{ display: isDropdownOpen ? 'block' : 'none' }}
+                >
+                  <Link href={`/users/${user.username}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100" onClick={() => setIsDropdownOpen(false)}>
                     个人主页
                   </Link>
-                  <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                  <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsDropdownOpen(false)}>
                     用户设置
                   </Link>
-                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+                  <button onClick={() => {
+                      logout();
+                      setIsDropdownOpen(false);
+                    }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
                     注销
                   </button>
                 </div>
