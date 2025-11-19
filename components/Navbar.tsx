@@ -1,4 +1,3 @@
-// components/Navbar.tsx (Reddit 风格)
 'use client';
 
 import Link from 'next/link';
@@ -67,8 +66,8 @@ export default function Navbar() {
                 <span className="font-medium">发帖</span>
               </Link>
 
-              <div className="relative group">
-                <button className="flex items-center gap-2 border border-transparent hover:border-gray-200 p-1 rounded cursor-pointer">
+              <div className="relative group h-full flex items-center">
+                <button className="flex items-center gap-2 border border-transparent hover:border-gray-200 p-1 rounded cursor-pointer py-2">
                   {user.avatar ? (
                     <img
                       src={user.avatar}
@@ -81,9 +80,17 @@ export default function Navbar() {
                     </div>
                   )}
                   <span className="text-sm font-medium hidden lg:block">{user.username}</span>
+                  {/* 小箭头 (可选) */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-500">
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                  </svg>
                 </button>
                 {/* 下拉菜单 (简单实现) */}
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg hidden group-hover:block">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg hidden group-hover:block overflow-hidden z-50
+                                 before:absolute before:-top-4 before:left-0 before:w-full before:h-4 before:bg-transparent">
+                  <Link href={`/users/${user.username}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">
+                    个人主页
+                  </Link>
                   <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                     用户设置
                   </Link>
