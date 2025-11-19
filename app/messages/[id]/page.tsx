@@ -19,13 +19,21 @@ export default function ChatPage({ params }: ChatPageProps) {
     const [otherUser, setOtherUser] = useState<any>(null); // (新) 存储对方信息用于标题
     const socketRef = useRef<WebSocket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    // 添加辅助函数
+    const getAvatarUrl = (url: string | null | undefined) => {
+        if (!url) return null;
+        if (url.startsWith('http')) return url;
+        return `${apiUrl}${url}`;
+    };
 
     // 1. 加载历史消息 & 会话详情 (为了获取对方名字)
     useEffect(() => {
         if (!accessToken) return;
         const fetchData = async () => {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                
                 
                 // 获取消息
                 const msgsRes = await axios.get(`${apiUrl}/api/v1/chat/conversations/${conversationId}/messages/`, {
@@ -100,7 +108,10 @@ export default function ChatPage({ params }: ChatPageProps) {
                 {messages.map((msg, index) => {
                     const isMe = msg.sender === user?.username || msg.sender.username === user?.username;
                     // 尝试获取头像 (WebSocket 消息里有 avatar 字段，API 消息里在 sender 对象里)
-                    const avatarUrl = msg.avatar || msg.sender.avatar; 
+                    // 获取并处理头像 URL 
+                    // msg.avatar 来自 WebSocket, msg.sender.avatar 来自 API 历史记录
+                    const rawAvatar = msg.avatar || msg.sender?.avatar;
+                    const avatarUrl = getAvatarUrl(rawAvatar);
 
                     return (
                         <div key={index} className={`flex gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}>

@@ -1,10 +1,11 @@
-// app/users/[username]/page.tsx
+// app/users/[username]/page.tsx (集成弹窗版)
 'use client';
 
 import { useState, useEffect, use } from 'react';
 import { ApiPost, ApiProfile } from "@/types";
 import PostCard from "@/components/PostCard";
 import FollowButton from "@/components/FollowButton";
+import UserListModal from "@/components/UserListModal"; // (!!) 导入弹窗
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import Link from 'next/link';
@@ -17,12 +18,15 @@ interface UserPageProps {
 export default function UserPage({ params }: UserPageProps) {
   const { username } = use(params);
   const { accessToken, isAuthenticated, user } = useAuth();
-  const router = useRouter(); // 初始化 router
+  const router = useRouter();
   
   const [profile, setProfile] = useState<ApiProfile | null>(null);
   const [posts, setPosts] = useState<ApiPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isChatting, setIsChatting] = useState(false); // 防止重复点击
+  const [isChatting, setIsChatting] = useState(false);
+  
+  // (!!) 弹窗状态 (!!)
+  const [modalType, setModalType] = useState<'followers' | 'following' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,53 +56,37 @@ export default function UserPage({ params }: UserPageProps) {
     fetchData();
   }, [username, accessToken]);
 
-  // 处理关注状态变化
   const handleFollowChange = (newIsFollowed: boolean) => {
     if (!profile) return;
-
-    // 乐观更新：直接在前端修改数字，不需要重新请求后端
     setProfile({
         ...profile,
         is_followed: newIsFollowed,
         followers_count: newIsFollowed 
-            ? profile.followers_count + 1 // 关注：+1
-            : profile.followers_count - 1 // 取消：-1
+            ? profile.followers_count + 1 
+            : profile.followers_count - 1
     });
   };
 
-  // (!!!) 新增：处理私信点击 (!!!)
   const handleStartChat = async () => {
     if (!isAuthenticated) {
-        if(confirm('私信需要先登录，是否去登录？')) {
-            router.push('/login');
-        }
+        if(confirm('私信需要先登录，是否去登录？')) router.push('/login');
         return;
     }
-    
-    // 防止自己给自己发私信
     if (user?.username === username) {
         alert("你不能给自己发私信。");
         return;
     }
-
     if (isChatting) return;
     setIsChatting(true);
 
     try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        // 调用后端的 start 接口
         const res = await axios.post(
             `${apiUrl}/api/v1/chat/conversations/start/`,
-            { username: username }, // 发送对方的用户名
+            { username: username },
             { headers: { Authorization: `JWT ${accessToken}` } }
         );
-
-        // 后端返回 { id: 1, participants: [...] }
-        const conversationId = res.data.id;
-        
-        // 跳转到聊天页面
-        router.push(`/messages/${conversationId}`);
-
+        router.push(`/messages/${res.data.id}`);
     } catch (error) {
         console.error("Failed to start chat", error);
         alert("无法发起私信，请稍后重试。");
@@ -106,24 +94,33 @@ export default function UserPage({ params }: UserPageProps) {
     }
   };
 
+  // (!!) 拉黑功能 (!!!)
+  const handleBlock = async () => {
+      if (!confirm(`确定要拉黑 u/${username} 吗？拉黑后你们将无法看到对方的帖子。`)) return;
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        await axios.post(
+            `${apiUrl}/api/v1/profiles/${username}/block/`, 
+            {}, 
+            { headers: { Authorization: `JWT ${accessToken}` } }
+        );
+        alert('已拉黑。');
+        router.push('/'); // 拉黑后跳回首页
+      } catch (e) { alert('操作失败'); }
+  };
+
+
   if (loading) return <div className="p-10 text-center text-gray-500">加载中...</div>;
   if (!profile) return <div className="p-10 text-center">用户未找到</div>;
 
   return (
     <div className="max-w-4xl mx-auto">
-       <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm">
-          {/* (!!!) 大头像逻辑 (!!!) */}
-          {profile.avatar ? (
-              <img 
-                  src={profile.avatar} 
-                  alt={profile.username} 
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-              />
-          ) : (
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md">
-                  {username.slice(0, 1).toUpperCase()}
-              </div>
-          )}
+       <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm relative">
+          
+          {/* 头像 */}
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md overflow-hidden">
+              {profile.avatar ? <img src={profile.avatar} className="w-full h-full object-cover" /> : username.slice(0, 1).toUpperCase()}
+          </div>
           
           <div className="flex-1 text-center sm:text-left">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">u/{profile.username}</h1>
@@ -132,38 +129,46 @@ export default function UserPage({ params }: UserPageProps) {
               </p>
               
               <div className="flex justify-center sm:justify-start gap-6 mb-4 text-sm">
-                  <div className="flex flex-col">
-                      {/* 这里显示的 followers_count 现在是实时的了 */}
+                  {/* (!!!) 点击打开粉丝弹窗 (!!!) */}
+                  <button onClick={() => setModalType('followers')} className="flex flex-col hover:bg-gray-50 p-1 rounded transition">
                       <span className="font-bold text-gray-900 text-lg">{profile.followers_count}</span>
                       <span className="text-gray-500">粉丝</span>
-                  </div>
-                  <div className="flex flex-col">
+                  </button>
+
+                  {/* (!!!) 点击打开关注弹窗 (!!!) */}
+                  <button onClick={() => setModalType('following')} className="flex flex-col hover:bg-gray-50 p-1 rounded transition">
                       <span className="font-bold text-gray-900 text-lg">{profile.following_count}</span>
                       <span className="text-gray-500">正在关注</span>
-                  </div>
-                  <div className="flex flex-col">
+                  </button>
+                  
+                  <div className="flex flex-col p-1">
                       <span className="font-bold text-gray-900 text-lg">{posts.length}</span>
                       <span className="text-gray-500">帖子</span>
                   </div>
               </div>
 
               <div className="flex justify-center sm:justify-start gap-3">
-                  {/* 传入回调函数*/}
                   <FollowButton 
                     username={profile.username} 
                     initialIsFollowed={profile.is_followed}
                     onFollowChange={handleFollowChange} 
                   />
-                  {/* 激活私信按钮 */}
-                  {/* 只有当查看的不是自己时，才显示私信按钮 */}
+                  
                   {user?.username !== username && (
-                      <button 
-                        onClick={handleStartChat}
-                        disabled={isChatting}
-                        className="bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm font-bold hover:bg-gray-200 border border-gray-200 disabled:opacity-50"
-                      >
-                        {isChatting ? '跳转中...' : '私信'}
-                      </button>
+                      <>
+                        <button 
+                            onClick={handleStartChat}
+                            disabled={isChatting}
+                            className="bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm font-bold hover:bg-gray-200 border border-gray-200 disabled:opacity-50"
+                        >
+                            {isChatting ? '跳转中...' : '私信'}
+                        </button>
+                        
+                        {/* 拉黑按钮 (小一点，放在旁边) */}
+                        <button onClick={handleBlock} className="text-gray-400 hover:text-red-600 text-sm px-2" title="拉黑用户">
+                            🚫
+                        </button>
+                      </>
                   )}
               </div>
           </div>
@@ -179,6 +184,20 @@ export default function UserPage({ params }: UserPageProps) {
            posts.map(post => <PostCard key={post.id} post={post} />)
          )}
        </div>
+
+       {/* (!!!) 渲染弹窗 (!!!) */}
+       <UserListModal 
+          isOpen={modalType === 'followers'}
+          onClose={() => setModalType(null)}
+          title={`u/${username} 的粉丝`}
+          endpoint={`/api/v1/profiles/${username}/followers/`}
+       />
+       <UserListModal 
+          isOpen={modalType === 'following'}
+          onClose={() => setModalType(null)}
+          title={`u/${username} 关注的人`}
+          endpoint={`/api/v1/profiles/${username}/following/`}
+       />
     </div>
   );
 }

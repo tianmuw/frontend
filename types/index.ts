@@ -4,6 +4,12 @@ export interface ApiUser {
   id: number;
   username: string;
   avatar?: string | null;
+
+  // 新增隐私字段 
+  is_followers_public?: boolean;
+  is_following_public?: boolean;
+  is_joined_topics_public?: boolean;
+  is_created_topics_public?: boolean;
 }
 
 export interface ApiTopic {
@@ -69,7 +75,7 @@ export interface ApiProfile {
 
 export interface ApiNotification {
   id: number;
-  notification_type: 'follow' | 'comment' | 'reply' | 'vote';
+  notification_type: 'follow' | 'comment' | 'reply' | 'vote' | 'message';
   actor: ApiUser;    // 触发者 (Mike)
   post_id?: number;  // 关联帖子 (可选)
   is_read: boolean;

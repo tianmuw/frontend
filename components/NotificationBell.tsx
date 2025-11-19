@@ -70,6 +70,11 @@ export default function NotificationBell() {
     // 跳转逻辑
     if (notification.notification_type === 'follow') {
         router.push(`/users/${notification.actor.username}`);
+    } else if (notification.notification_type === 'message') {
+        // 私信跳转
+        // 点击通知跳转到私信列表页，或者我们可以更智能地去请求 conversation_id
+        // 简单起见，跳到消息中心
+        router.push(`/messages`); 
     } else if (notification.post_id) {
         router.push(`/posts/${notification.post_id}`);
     }
@@ -157,6 +162,7 @@ export default function NotificationBell() {
                                     {note.notification_type === 'follow' && <span className="text-xs">👤</span>}
                                     {note.notification_type === 'comment' && <span className="text-xs">💬</span>}
                                     {note.notification_type === 'reply' && <span className="text-xs">↩️</span>}
+                                    {note.notification_type === 'message' && <span className="text-xs">✉️</span>}
                                 </div>
                             </div>
 
@@ -166,6 +172,7 @@ export default function NotificationBell() {
                                     {note.notification_type === 'follow' && '关注了你'}
                                     {note.notification_type === 'comment' && '评论了你的帖子'}
                                     {note.notification_type === 'reply' && '回复了你的评论'}
+                                    {note.notification_type === 'message' && '给你发了私信'}
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
                                     {new Date(note.created_at).toLocaleDateString()}
