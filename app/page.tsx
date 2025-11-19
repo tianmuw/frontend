@@ -3,6 +3,7 @@
 import { ApiPost } from "@/types"; // 导入我们刚定义的类型
 import SortTabs from '@/components/SortTabs';
 import PostCard from '@/components/PostCard';
+import TopicCarousel from '@/components/TopicCarousel';
 
 //1. 定义 props 类型
 interface HomePageProps {
@@ -50,6 +51,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6 px-2">社交购物广场</h1>
       
+      <TopicCarousel />
+
       <SortTabs />
 
       {posts.length === 0 ? (

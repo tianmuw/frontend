@@ -71,11 +71,25 @@ export default function TopicPage({ params, searchParams }: TopicPageProps) {
     <div className="min-h-screen bg-gray-100">
       {/* 1. 顶部 Banner */}
       <div className="bg-white border-b border-gray-200 mb-6">
-        <div className="h-24 bg-blue-500 w-full"></div>
+        {/* <div className="h-24 bg-blue-500 w-full relative overflow-hidden"></div> */}
+        <div 
+            className="h-32 w-full relative overflow-hidden bg-gray-300" // 加高一点到 h-32
+            style={
+                topic.banner 
+                ? { backgroundImage: `url(${topic.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : { backgroundColor: '#3b82f6' } // 默认蓝色
+            }
+        >
+            {/* 如果没有 banner，可以显示一个默认图案，或者保持纯色 */}
+        </div>
         <div className="max-w-5xl mx-auto px-4 pb-4 relative">
           <div className="flex items-end -mt-6 mb-2">
-            <div className="w-20 h-20 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-sm overflow-hidden mr-4">
-              <span className="text-4xl font-bold text-gray-800">t/</span>
+            <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-sm overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center">
+                {topic.icon ? (
+                    <img src={topic.icon} alt={topic.name} className="w-full h-full object-cover" />
+                ) : (
+                    <span className="text-4xl font-bold text-gray-800">t/</span>
+                )}
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-1">

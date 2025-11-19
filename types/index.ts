@@ -3,6 +3,7 @@
 export interface ApiUser {
   id: number;
   username: string;
+  avatar?: string | null;
 }
 
 export interface ApiTopic {
@@ -15,6 +16,12 @@ export interface ApiTopic {
   subscribers_count?: number; // 我们也可以顺便加上这个
 
   is_subscribed?: boolean;
+
+  posts_count?: number;
+
+  icon?: string | null;
+
+  banner?: string | null;
 }
 
 export interface ApiProduct {
@@ -57,4 +64,5 @@ export interface ApiProfile {
   followers_count: number;
   following_count: number;
   is_followed: boolean; // 我是否关注了他
+  avatar?: string | null;
 }

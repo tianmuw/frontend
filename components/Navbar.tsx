@@ -69,9 +69,17 @@ export default function Navbar() {
 
               <div className="relative group">
                  <button className="flex items-center gap-2 border border-transparent hover:border-gray-200 p-1 rounded cursor-pointer">
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {user.username.slice(0, 1).toUpperCase()}
-                    </div>
+                    {user.avatar ? (
+                        <img 
+                            src={user.avatar} 
+                            alt={user.username} 
+                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {user.username.slice(0, 1).toUpperCase()}
+                        </div>
+                    )}
                     <span className="text-sm font-medium hidden lg:block">{user.username}</span>
                  </button>
                  {/* 下拉菜单 (简单实现) */}

@@ -69,9 +69,18 @@ export default function UserPage({ params }: UserPageProps) {
   return (
     <div className="max-w-4xl mx-auto">
        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md">
-              {username.slice(0, 1).toUpperCase()}
-          </div>
+          {/* (!!!) 大头像逻辑 (!!!) */}
+          {profile.avatar ? (
+              <img 
+                  src={profile.avatar} 
+                  alt={profile.username} 
+                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
+              />
+          ) : (
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md">
+                  {username.slice(0, 1).toUpperCase()}
+              </div>
+          )}
           
           <div className="flex-1 text-center sm:text-left">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">u/{profile.username}</h1>

@@ -1,175 +1,164 @@
-// app/create-post/page.tsx
+// app/create-post/page.tsx (Tailwind 美化版)
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-
-// 1. 导入 useAuth 来获取登录状态和 token
 import { useAuth } from '@/context/AuthContext';
-
-// 2. 导入我们的话题类型
 import { ApiTopic } from '@/types';
 
 export default function CreatePostPage() {
-  const { user, accessToken, isAuthenticated } = useAuth();
+  const { accessToken, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // 3. 表单的状态
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [productUrl, setProductUrl] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState(''); // 存储选中的 topic slug
+  const [selectedTopic, setSelectedTopic] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  // 4. (新) 存储从 API 获取的话题列表
   const [topics, setTopics] = useState<ApiTopic[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 5. (新) 效果钩子：在组件加载时获取话题列表
   useEffect(() => {
     const fetchTopics = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const response = await axios.get(`${apiUrl}/api/v1/topics/`);
-        setTopics(response.data);
-        // 默认选中第一个话题
-        if (response.data.length > 0) {
-          setSelectedTopic(response.data[0].slug);
+        const data = Array.isArray(response.data) ? response.data : response.data.results || [];
+        setTopics(data);
+        if (data.length > 0) {
+          setSelectedTopic(data[0].slug);
         }
       } catch (err) {
         console.error('无法加载话题', err);
-        setError('无法加载话题列表，请刷新重试。');
       }
     };
-
     fetchTopics();
-  }, []); // 空依赖数组，表示只在组件加载时运行一次
+  }, []);
 
-  // 6. (关键) 路由保护
   useEffect(() => {
-    // 如果 AuthContext 确认加载完毕，但用户未认证
     if (!isAuthenticated) {
       router.push('/login');
     }
   }, [isAuthenticated, router]);
 
-  // 7. 表单提交处理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!accessToken) return;
 
-    if (!accessToken) {
-      setError('您未登录或登录已过期，请重新登录。');
-      return;
-    }
-
+    setIsLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      // 8. (关键) 发送 POST 请求，并带上认证 Header
       await axios.post(
         `${apiUrl}/api/v1/posts/`,
         {
-          title: title,
-          content: content,
-          product_url: productUrl,
-          topic: selectedTopic, // 后端需要的是 topic slug
+            title,
+            content,
+            product_url: productUrl,
+            topic: selectedTopic,
         },
-        {
-          headers: {
-            // (!!!) 这就是我们用 JWT 令牌认证的方式 (!!!)
-            Authorization: `JWT ${accessToken}`,
-          },
-        }
+        { headers: { Authorization: `JWT ${accessToken}` } }
       );
-
-      // 9. 发布成功！跳转回首页
       router.push('/');
-
     } catch (err) {
       console.error('发布失败', err);
       setError('发布失败，请检查所有字段并重试。');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // 10. 如果未登录，显示加载中... (防止页面闪烁)
-  if (!isAuthenticated) {
-    return <main style={{ padding: '2rem' }}>加载中...</main>;
-  }
-
-  // 11. (新) 话题下拉菜单
-  const topicSelector = (
-    <div style={{ marginBottom: '1rem' }}>
-      <label htmlFor="topic">选择话题:</label>
-      <select
-        id="topic"
-        value={selectedTopic}
-        onChange={(e) => setSelectedTopic(e.target.value)}
-        required
-        style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-      >
-        {topics.length === 0 ? (
-          <option disabled>加载话题中...</option>
-        ) : (
-          topics.map((topic) => (
-            <option key={topic.slug} value={topic.slug}>
-              {topic.name}
-            </option>
-          ))
-        )}
-      </select>
-    </div>
-  );
+  if (!isAuthenticated) return <div className="p-10 text-center text-gray-500">请先登录...</div>;
 
   return (
-    <main style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '600px', margin: 'auto' }}>
-      <h1>发布新帖子</h1>
-      <form onSubmit={handleSubmit}>
-        {/* 话题下拉菜单 */}
-        {topicSelector}
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 mt-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">
+        发布新帖子
+      </h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* 话题选择 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">选择话题 (Community)</label>
+          <div className="relative">
+             <select
+                value={selectedTopic}
+                onChange={(e) => setSelectedTopic(e.target.value)}
+                required
+                className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white"
+            >
+                {topics.length === 0 ? (
+                <option disabled>加载中...</option>
+                ) : (
+                topics.map((topic) => (
+                    <option key={topic.slug} value={topic.slug}>
+                    t/{topic.name}
+                    </option>
+                ))
+                )}
+            </select>
+          </div>
+        </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="title">标题:</label>
+        {/* 标题 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">标题</label>
           <input
-            id="title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+            placeholder="起一个有趣的标题..."
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="content">内容:</label>
+        {/* 内容 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">内容</label>
           <textarea
-            id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
-            rows={6}
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+            rows={8}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y placeholder-gray-400"
+            placeholder="分享你的心得、评测或故事..."
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="productUrl">关联商品链接 (URL):</label>
-          <input
-            id="productUrl"
-            type="url"
-            value={productUrl}
-            onChange={(e) => setProductUrl(e.target.value)}
-            required
-            placeholder="例如: https://www.jd.com/..."
-            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-          />
+        {/* 商品链接 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">关联商品链接 (URL)</label>
+          <div className="flex rounded-md shadow-sm">
+            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+              🔗
+            </span>
+            <input
+                type="url"
+                value={productUrl}
+                onChange={(e) => setProductUrl(e.target.value)}
+                required
+                className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="例如: https://item.jd.com/..."
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-400">我们会自动抓取商品信息。</p>
         </div>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md border border-red-100">{error}</div>}
 
-        <button type="submit" style={{ padding: '10px 15px' }}>
-          发布
-        </button>
+        <div className="flex justify-end pt-4 border-t border-gray-100">
+            <button 
+                type="submit" 
+                disabled={isLoading}
+                className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? '发布中...' : '发布'}
+            </button>
+        </div>
       </form>
-    </main>
+    </div>
   );
 }

@@ -20,9 +20,20 @@ export default function Comment({ comment, postId, onCommentPosted }: CommentPro
       {/* 1. 评论头部: 竖线 (折叠线) + 头像 + 用户名 + 时间 */}
       <div className="flex items-center text-xs text-gray-500 mb-1.5">
         {/* 简单的头像占位符 */}
-        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mr-2 text-blue-600 font-bold text-[10px]">
+        {/* <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mr-2 text-blue-600 font-bold text-[10px]">
             {comment.author.username.substring(0, 1).toUpperCase()}
-        </div>
+        </div> */}
+        {comment.author.avatar ? (
+            <img 
+                src={comment.author.avatar} 
+                alt={comment.author.username} 
+                className="w-6 h-6 rounded-full mr-2 object-cover border border-gray-100"
+            />
+        ) : (
+            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mr-2 text-blue-600 font-bold text-[10px]">
+                {comment.author.username.substring(0, 1).toUpperCase()}
+            </div>
+        )}
         
         <Link href={`/users/${comment.author.username}`} className="font-semibold text-gray-900 hover:underline">
             {comment.author.username}
