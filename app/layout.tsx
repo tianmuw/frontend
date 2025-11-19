@@ -1,16 +1,18 @@
-// app/layout.tsx (Tailwind 版本)
+// app/layout.tsx (Reddit 三栏布局版)
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css"; // (!!) 确保 globals.css (它包含了 Tailwind) 被导入
+import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
+import LeftSidebar from "@/components/LeftSidebar";
+import RightSidebar from "@/components/RightSidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "社交购物平台",
-  description: "由 Gemini 和你共同创建",
+  description: "仿 Reddit 风格的社交电商",
 };
 
 export default function RootLayout({
@@ -20,17 +22,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* (!!!) 1. 给 body 添加一个柔和的灰色背景 (!!!) */}
       <body className={`${inter.className} bg-gray-100 min-h-screen`}>
         <AuthProvider>
-          {/* Navbar 现在会在一个白色背景的容器里 */}
+          {/* 1. 顶部导航 (Fixed) */}
           <Navbar /> 
 
-          {/* (!!!) 2. 创建一个居中、有最大宽度的"容器" (!!!) */}
-          {/* 就像 Reddit/微博 的主内容区 */}
-          <main className="max-w-4xl mx-auto p-4">
-            {children}
-          </main>
+          {/* 2. 主布局容器 (Top padding 留给 Navbar) */}
+          <div className="pt-16 max-w-[1800px] mx-auto flex justify-center">
+             
+             {/* 左侧边栏 (Fixed) */}
+             <div className="hidden lg:block w-64 flex-shrink-0">
+                <LeftSidebar />
+             </div>
+
+             {/* 中间内容区域 (Fluid width) */}
+             {/* flex-1 让它占据剩余空间，max-w 限制阅读宽度 */}
+             <main className="flex-1 max-w-3xl w-full p-4 min-h-screen">
+                {children}
+             </main>
+
+             {/* 右侧边栏 (Fixed) */}
+             <div className="hidden xl:block w-80 flex-shrink-0">
+                <RightSidebar />
+             </div>
+
+          </div>
         </AuthProvider>
       </body>
     </html>

@@ -9,6 +9,12 @@ export interface ApiTopic {
   id: number;
   name: string;
   slug: string;
+  
+  description?: string; // 既然有时候可能没有，我们设为可选 (?)
+  created_at?: string;  // 同上
+  subscribers_count?: number; // 我们也可以顺便加上这个
+
+  is_subscribed?: boolean;
 }
 
 export interface ApiProduct {

@@ -5,12 +5,13 @@ import Link from 'next/link'; // 用于导航
 import VoteButtons from '@/components/VoteButtons';
 import SortTabs from '@/components/SortTabs';
 import PostCard from '@/components/PostCard';
+import TopicJoinButton from '@/components/TopicJoinButton';
 
 // (新) 定义这个页面的 props 类型
 // Next.js 会自动把 URL 中的 {slug} 作为 'params' 传进来
 interface TopicPageProps {
-  params: { slug: string };
-  searchParams?: { [key: string]: string | string[] | undefined }; // <-- 添加
+    params: { slug: string };
+    searchParams?: { [key: string]: string | string[] | undefined }; // <-- 添加
 }
 
 /**
@@ -83,13 +84,13 @@ export default async function TopicPage({ params, searchParams }: TopicPageProps
             <div className="bg-white border-b border-gray-200 mb-6">
                 {/* 彩色背景条 (可以是图片) */}
                 <div className="h-24 bg-blue-500 w-full"></div>
-                
+
                 {/* 话题信息栏 */}
                 <div className="max-w-5xl mx-auto px-4 pb-4 relative">
                     <div className="flex items-end -mt-6 mb-2">
-                         {/* 大头像 */}
+                        {/* 大头像 */}
                         <div className="w-20 h-20 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-sm overflow-hidden mr-4">
-                             <span className="text-4xl font-bold text-gray-800">t/</span>
+                            <span className="text-4xl font-bold text-gray-800">t/</span>
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-1">
@@ -97,11 +98,13 @@ export default async function TopicPage({ params, searchParams }: TopicPageProps
                             </h1>
                             <p className="text-gray-500 text-sm font-medium">t/{topic.slug}</p>
                         </div>
-                        
+
                         <div className="ml-auto mb-2 flex gap-2">
-                            <button className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition">
-                                加入
-                            </button>
+                            <TopicJoinButton
+                                slug={topic.slug}
+                                initialIsJoined={topic.is_subscribed}
+                                className="px-6 py-2 text-base" // 自定义一点样式让它大一点
+                            />
                         </div>
                     </div>
                 </div>
@@ -109,17 +112,17 @@ export default async function TopicPage({ params, searchParams }: TopicPageProps
 
             {/* 2. 主内容区域：双栏布局 */}
             <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                
+
                 {/* 左侧：帖子列表 (占 2/3) */}
                 <div className="md:col-span-2">
                     <div className="mb-4">
                         <SortTabs />
                     </div>
-                    
+
                     {posts.length === 0 ? (
                         <div className="bg-white p-10 text-center rounded border border-gray-200">
-                             还没有帖子。
-                             <Link href="/create-post" className="text-blue-600 underline ml-1">去发第一帖</Link>
+                            还没有帖子。
+                            <Link href="/create-post" className="text-blue-600 underline ml-1">去发第一帖</Link>
                         </div>
                     ) : (
                         <div className="flex flex-col space-y-4">
@@ -139,15 +142,15 @@ export default async function TopicPage({ params, searchParams }: TopicPageProps
                         <div className="mb-4 text-gray-700 text-sm leading-relaxed">
                             {topic.description || "这个话题还没有简介。"}
                         </div>
-                        
+
                         <div className="border-t border-gray-100 pt-4 mt-4 text-sm text-gray-500">
                             <div className="flex items-center mb-2">
                                 <span className="mr-2">📅</span> 创建于 {new Date(topic.created_at || Date.now()).toLocaleDateString()}
                             </div>
                         </div>
 
-                        <Link 
-                            href="/create-post" 
+                        <Link
+                            href="/create-post"
                             className="mt-4 block w-full text-center bg-blue-600 text-white py-2 rounded-full font-bold hover:bg-blue-700"
                         >
                             发布帖子
