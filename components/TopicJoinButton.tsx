@@ -1,7 +1,7 @@
-// components/TopicJoinButton.tsx
+// components/TopicJoinButton.tsx (修复版 - 增加状态同步)
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // (!!) 引入 useEffect
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 interface TopicJoinButtonProps {
   slug: string;
   initialIsJoined?: boolean;
-  className?: string; // 允许从外部自定义样式
+  className?: string;
 }
 
 export default function TopicJoinButton({ slug, initialIsJoined = false, className }: TopicJoinButtonProps) {
@@ -17,6 +17,12 @@ export default function TopicJoinButton({ slug, initialIsJoined = false, classNa
   const [isLoading, setIsLoading] = useState(false);
   const { accessToken, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // (!!!) 关键修复：监听 initialIsJoined 的变化 (!!!)
+  // 当父组件(页面)获取到真实数据(true)时，这里会把内部状态也更新为 true
+  useEffect(() => {
+    setIsJoined(initialIsJoined);
+  }, [initialIsJoined]);
 
   const handleJoinToggle = async () => {
     if (!isAuthenticated) {
@@ -30,20 +36,16 @@ export default function TopicJoinButton({ slug, initialIsJoined = false, classNa
     setIsLoading(true);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    // 如果已加入，则调用 leave；否则调用 join
     const action = isJoined ? 'leave' : 'join'; 
 
     try {
       await axios.post(
         `${apiUrl}/api/v1/topics/${slug}/${action}/`,
-        {}, // body 为空
+        {}, 
         { headers: { Authorization: `JWT ${accessToken}` } }
       );
-
-      // 成功后切换状态
+      
       setIsJoined(!isJoined);
-
-      // (可选) 刷新页面以更新订阅人数，或者我们只更新按钮状态
       // router.refresh(); 
 
     } catch (error) {
@@ -54,15 +56,14 @@ export default function TopicJoinButton({ slug, initialIsJoined = false, classNa
     }
   };
 
-  // 两种状态的样式
   const baseStyle = "px-4 py-1.5 rounded-full font-bold text-sm transition-colors flex items-center justify-center min-w-[80px]";
-  const joinedStyle = "bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-300"; // 已加入 (显示"已加入"或"退出")
-  const notJoinedStyle = "bg-blue-600 text-white hover:bg-blue-700"; // 未加入 (显示"加入")
+  const joinedStyle = "bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-300"; 
+  const notJoinedStyle = "bg-blue-600 text-white hover:bg-blue-700"; 
 
   return (
     <button 
       onClick={(e) => {
-         e.preventDefault(); // 防止触发父级链接跳转
+         e.preventDefault();
          e.stopPropagation();
          handleJoinToggle();
       }}

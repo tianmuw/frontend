@@ -39,15 +39,22 @@ export interface ApiPost {
   comments_count: number;
 }
 
-// types/index.ts (在文件底部追加)
-
 export interface ApiComment {
   id: number;
   content: string;
   author: ApiUser;    // 复用我们已有的 ApiUser
   created_at: string; // ISO 日期字符串
 
-  // (!!!) 递归 (!!!)
+  // 递归
   // "replies" 字段是一个 ApiComment 数组
   replies: ApiComment[]; 
+}
+
+export interface ApiProfile {
+  id: number;
+  username: string;
+  date_joined: string;
+  followers_count: number;
+  following_count: number;
+  is_followed: boolean; // 我是否关注了他
 }
