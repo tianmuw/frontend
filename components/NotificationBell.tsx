@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ApiNotification } from '@/types';
 import { useRouter } from 'next/navigation';
@@ -14,6 +13,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);  //Toast 提示状态
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -33,6 +33,38 @@ export default function NotificationBell() {
     // 轮询或者简单的单次获取。这里我们只做单次。
     fetchUnreadCount();
   }, [accessToken, apiUrl]);
+
+  //WebSocket 实时监听
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = 'localhost:8000'; // 生产环境需改为 process.env.NEXT_PUBLIC_WS_HOST
+    const wsUrl = `${wsProtocol}//${wsHost}/ws/notifications/?token=${accessToken}`;
+    
+    const socket = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'new_notification') {
+            // 1. 红点 + 1
+            setUnreadCount(prev => prev + 1);
+            
+            // 2. 显示 Toast 提示
+            const text = `${data.actor_name} ${
+                data.notification_type === 'follow' ? '关注了你' :
+                data.notification_type === 'message' ? '给你发了私信' :
+                '有新动态'
+            }`;
+            setToastMsg(text);
+            
+            // 3秒后隐藏 Toast
+            setTimeout(() => setToastMsg(null), 3000);
+        }
+    };
+
+    return () => socket.close();
+  }, [accessToken]);
 
   // 2. 点击铃铛: 切换下拉菜单 & 加载列表
   const toggleDropdown = async () => {
@@ -103,10 +135,23 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getAvatarUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${apiUrl}${url}`;
+  };
+
   if (!isAuthenticated) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* (!!!) Toast 提示 (!!!) */}
+      {toastMsg && (
+          <div className="absolute top-12 right-0 w-64 bg-blue-600 text-white text-sm p-3 rounded-lg shadow-lg z-[60] animate-bounce">
+              🔔 {toastMsg}
+          </div>
+      )}
+      
       {/* 铃铛按钮 */}
       <button 
         onClick={toggleDropdown}
