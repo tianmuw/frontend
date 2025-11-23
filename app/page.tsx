@@ -10,6 +10,7 @@ import SortTabs from '@/components/SortTabs';
 import PostCard from '@/components/PostCard';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext'; // (!!) 导入 AuthContext
+import TopicCarousel from '@/components/TopicCarousel';
 
 // 包装组件以使用 useSearchParams
 function HomeContent() {
@@ -59,6 +60,8 @@ function HomeContent() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6 px-2">社交购物广场</h1>
+      
+      <TopicCarousel />
       
       <SortTabs />
 
