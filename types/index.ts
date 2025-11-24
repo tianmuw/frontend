@@ -1,5 +1,10 @@
 // types/index.ts
 
+export interface ApiPostImage {
+  id: number;
+  image: string; // 图片 URL
+}
+
 export interface ApiUser {
   id: number;
   username: string;
@@ -50,6 +55,8 @@ export interface ApiPost {
   score: number;
   user_vote: number | null; // 可能是 1, -1, 或 null
   comments_count: number;
+  video?: string | null;
+  images?: ApiPostImage[];
 }
 
 export interface ApiComment {

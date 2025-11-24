@@ -6,6 +6,7 @@ import { use } from 'react';
 import VoteButtons from "@/components/VoteButtons";
 import CommentSection from '@/components/CommentSection';
 import { getImageUrl } from '@/utils/url';
+import PostMedia from '@/components/PostMedia';
 
 interface PostPageProps {
   params: {
@@ -75,6 +76,11 @@ export default async function PostPage({ params }: PostPageProps) {
           <h1 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">
             {post.title}
           </h1>
+
+          {/* 插入多媒体展示 */}
+          <div className="mb-6">
+             <PostMedia video={post.video} images={post.images} />
+          </div>
 
           {/* Content */}
           <div className="text-gray-800 leading-relaxed mb-6 text-base whitespace-pre-wrap">

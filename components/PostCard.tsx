@@ -4,6 +4,8 @@
 import { ApiPost } from "@/types";
 import Link from 'next/link';
 import VoteButtons from './VoteButtons';
+import PostMedia from './PostMedia'; 
+import { getImageUrl } from '@/utils/url';
 
 interface PostCardProps {
   post: ApiPost;
@@ -58,17 +60,32 @@ export default function PostCard({ post }: PostCardProps) {
           <span>{new Date(post.created_at).toLocaleDateString()}</span>
         </div>
 
-        {/* 2. 中间: 标题和内容 */}
-        <Link href={`/posts/${post.id}`} className="block group">
-          <h2 className="text-xl font-medium text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+        {/* 2. 标题 (独立链接) */}
+        <Link href={`/posts/${post.id}`} className="block mb-2">
+          <h2 className="text-xl font-medium text-gray-900 hover:text-blue-600 transition-colors">
             {post.title}
           </h2>
-          <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-            {post.content}
-          </p>
         </Link>
 
-        {/* 3. 关联商品 */}
+        {/* 3. (!!!) 多媒体区域 (独立，不被 Link 包裹) (!!!) */}
+        <div className="mb-3">
+            {/* 点击图片/视频区域也可以跳转到详情页 (对于图片)，或者直接播放 (对于视频) */}
+            {/* 这里我们简单的把 PostMedia 放这里，它内部处理了 video 的点击冒泡 */}
+            <Link href={`/posts/${post.id}`}>
+                 <PostMedia video={post.video} images={post.images} />
+            </Link>
+        </div>
+
+        {/* 4. 文字内容摘要 (独立链接) */}
+        {post.content && (
+            <Link href={`/posts/${post.id}`} className="block mb-4">
+                <p className="text-sm text-gray-600 line-clamp-3">
+                    {post.content}
+                </p>
+            </Link>
+        )}
+
+        {/* 5. 关联商品 */}
         <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded flex items-center space-x-3">
             {post.product.product_image_url ? (
               <img src={post.product.product_image_url} alt="Product" className="w-12 h-12 object-cover rounded bg-white" />
@@ -91,7 +108,7 @@ export default function PostCard({ post }: PostCardProps) {
             </div>
         </div>
 
-        {/* 4. 底部操作栏 */}
+        {/* 6. 底部操作栏 */}
         <div className="flex items-center space-x-2 text-gray-500 text-sm font-bold">
           <VoteButtons 
             postId={post.id}
