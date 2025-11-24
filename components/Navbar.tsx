@@ -41,18 +41,18 @@ export default function Navbar() {
       <div className="flex items-center justify-between h-full px-4 max-w-[1800px] mx-auto">
 
         {/* 1. Logo */}
-        <div className="flex items-center min-w-[200px]">
+        <div className="flex items-center min-w-[40px] lg:min-w-[200px]">
           <Link href="/" className="flex items-center gap-2">
             {/* 简单的 Logo 图标 */}
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
               S
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">SocialShop</span>
+            <span className="text-xl font-bold text-gray-900 hidden lg:block">SocialShop</span>
           </Link>
         </div>
 
-        {/* 2. 中间搜索框 (占据剩余空间) */}
-        <div className="flex-1 max-w-2xl px-4">
+        {/* 2. 中间搜索框 (手机上简化或隐藏，这里我们让它自适应宽度) */}
+        <div className="flex-1 max-w-2xl px-2 lg:px-4">
           <form onSubmit={handleSearch} className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,10 +69,11 @@ export default function Navbar() {
           </form>
         </div>
 
-        {/* 3. 右侧用户菜单 */}
-        <div className="flex items-center justify-end min-w-[200px] gap-4">
+        {/* 3. 右侧用户菜单(手机上只显示铃铛，电脑上显示完整菜单) */}
+        <div className="flex items-center justify-end min-w-[40px] lg:min-w-[200px] gap-2 lg:gap-4">
           {user ? (
             <>
+              {/* 发帖按钮 (仅在电脑显示，手机在底部) */}
               <Link
                 href="/create-post"
                 className="hidden md:flex items-center gap-1 text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-full transition-colors"
@@ -83,9 +84,10 @@ export default function Navbar() {
                 <span className="font-medium">发帖</span>
               </Link>
 
-              {/* 在这里插入铃铛 */}
+              {/* 铃铛(双端都显示) */}
               <NotificationBell />
 
+              {/* 头像下拉菜单 (仅在电脑显示，手机在底部"我的") */}
               <div 
                 ref={dropdownRef}
                 className="relative group h-full flex items-center" 
