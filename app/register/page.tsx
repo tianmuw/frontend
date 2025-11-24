@@ -60,7 +60,7 @@ export default function RegisterPage() {
       console.error('Registration failed', err);
       if (err.response && err.response.data) {
         const errorData = err.response.data;
-        let errorMessages = [];
+        let errorMessages: string[] = [];
         // Djoser 的错误格式可能是一个对象，key 是字段名
         Object.keys(errorData).forEach(key => {
             const msgs = errorData[key];
