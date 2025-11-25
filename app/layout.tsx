@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import AIChatWindow from "@/components/AIChatWindow";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -49,6 +50,9 @@ export default function RootLayout({
 
           </div>
           <MobileBottomNav />
+
+          {/* 放置 AI 悬浮窗 */}
+          <AIChatWindow />
         </AuthProvider>
       </body>
     </html>
