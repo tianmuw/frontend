@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   accessToken: string | null;
+  isLoading: boolean; // 新增状态 
 }
 
 // 创建 Context
@@ -26,14 +27,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // 默认为 true
 
   // 检查 localStorage 来初始化状态
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      setAccessToken(token);
-      fetchCurrentUser(token); // 异步获取用户信息
-    }
+    const initAuth = async () => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            setAccessToken(token);
+            await fetchCurrentUser(token);
+        }
+        // 无论成功失败，或者没有 token，初始化都算结束了
+        setIsLoading(false); 
+    };
+
+    initAuth();
   }, []);
 
   // (关键) 根据 token 去 API 获取当前用户信息
@@ -49,7 +57,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(response.data as ApiUser);
     } catch (error) {
       console.error("无法获取用户信息, token 可能已过期", error);
-      logout(); // token 无效，登出
+      // 不要在这里直接 logout，否则网络波动会导致登出。
+      // 只需清除状态即可
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      setAccessToken(null);
+      setUser(null);
     }
   };
 
@@ -72,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: !!user, user, login, logout, accessToken }}>
+    <AuthContext.Provider value={{ isAuthenticated: !!user, user, login, logout, accessToken, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

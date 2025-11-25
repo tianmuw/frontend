@@ -88,30 +88,33 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
 
           {/* Product Card */}
-          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-start sm:items-center space-x-4 hover:bg-gray-100 transition-colors">
-            {post.product.product_image_url ? (
-              <div className="flex-shrink-0 w-20 h-20 bg-white rounded border border-gray-200 overflow-hidden">
-                <img src={post.product.product_image_url} alt="Product" className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <div className="flex-shrink-0 w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">无图</div>
-            )}
-
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">
-                {post.product.product_title || '关联商品'}
-              </h3>
-              <p className="text-sm text-gray-500 mb-2">价格: <span className="text-orange-600 font-medium">{post.product.product_price || '暂无'}</span></p>
-              <a
-                href={post.product.original_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors font-bold"
-              >
-                去购买 &rarr;
-              </a>
+          {/* (!!!) 修复：只有当 product 存在时才渲染商品卡片 (!!!) */}
+          {post.product && (
+            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-start sm:items-center space-x-4 hover:bg-gray-100 transition-colors">
+                {post.product.product_image_url ? (
+                  <div className="flex-shrink-0 w-20 h-20 bg-white rounded border border-gray-200 overflow-hidden">
+                     <img src={post.product.product_image_url} alt="Product" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="flex-shrink-0 w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">无图</div>
+                )}
+                
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">
+                    {post.product.product_title || '关联商品'}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-2">价格: <span className="text-orange-600 font-medium">{post.product.product_price || '暂无'}</span></p>
+                  <a 
+                    href={post.product.original_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-block bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors font-bold"
+                  >
+                    去购买 &rarr;
+                  </a>
+                </div>
             </div>
-          </div>
+          )}
 
           {/* Footer: Actions (Vote & Share) */}
           <div className="flex items-center space-x-4 border-t border-gray-100 pt-4">

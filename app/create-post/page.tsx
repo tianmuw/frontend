@@ -266,7 +266,6 @@ export default function CreatePostPage() {
                 type="url"
                 value={productUrl}
                 onChange={(e) => setProductUrl(e.target.value)}
-                required
                 className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="例如: https://item.jd.com/..."
             />

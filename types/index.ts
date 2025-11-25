@@ -41,6 +41,9 @@ export interface ApiProduct {
   product_image_url: string | null;
   product_price: string | null;
   scrape_status: "PROCESSING" | "SUCCESS" | "FAILED";
+  product_type?: 'EXTERNAL' | 'INTERNAL';
+  price?: string | number | null;
+  stock?: number;
 }
 
 export interface ApiPost {
@@ -51,7 +54,7 @@ export interface ApiPost {
   created_at: string; // 这是一个 ISO 日期字符串
   author: ApiUser;
   topic: ApiTopic;
-  product: ApiProduct;
+  product?: ApiProduct | null;
   score: number;
   user_vote: number | null; // 可能是 1, -1, 或 null
   comments_count: number;

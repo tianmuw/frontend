@@ -85,28 +85,30 @@ export default function PostCard({ post }: PostCardProps) {
             </Link>
         )}
 
-        {/* 5. 关联商品 */}
-        <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded flex items-center space-x-3">
-            {post.product.product_image_url ? (
-              <img src={post.product.product_image_url} alt="Product" className="w-12 h-12 object-cover rounded bg-white" />
-            ) : (
-              <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">无图</div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {post.product.product_title || '商品加载中...'}
-              </p>
-              <a 
-                href={post.product.original_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-xs text-blue-500 hover:underline cursor-pointer"
-                onClick={(e) => e.stopPropagation()} 
-              >
-                去购买 &rarr;
-              </a>
+        {/* 5. 关联商品 (!!!) 加上判断：只有当 product 存在时才渲染 (!!!) */}
+        {post.product && (
+            <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded flex items-center space-x-3">
+                {post.product.product_image_url ? (
+                  <img src={post.product.product_image_url} alt="Product" className="w-12 h-12 object-cover rounded bg-white" />
+                ) : (
+                  <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">无图</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {post.product.product_title || '商品加载中...'}
+                  </p>
+                  <a 
+                    href={post.product.original_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline cursor-pointer"
+                    onClick={(e) => e.stopPropagation()} 
+                  >
+                    去购买 &rarr;
+                  </a>
+                </div>
             </div>
-        </div>
+        )}
 
         {/* 6. 底部操作栏 */}
         <div className="flex items-center space-x-2 text-gray-500 text-sm font-bold">

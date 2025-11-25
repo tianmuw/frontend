@@ -130,6 +130,11 @@ export default function Navbar() {
                   <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsDropdownOpen(false)}>
                     用户设置
                   </Link>
+
+                  {/* 商家入驻入口*/}
+                  <Link href="/merchant/apply" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">
+                    商家入驻
+                  </Link>
                   <button onClick={() => {
                       logout();
                       setIsDropdownOpen(false);
